@@ -111,6 +111,8 @@ def highlight(doc: pdoc.doc.Doc) -> str:
     # set up correct line numbers and anchors
     formatter.linespans = doc.qualname or "L"
     formatter.linenostart = doc.source_lines[0] + 1 if doc.source_lines else 1
+
+    formatter.filename = str(doc.source_file)
     return Markup(pygments.highlight(doc.source, lexer, formatter))
 
 
