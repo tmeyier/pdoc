@@ -1,0 +1,30 @@
+{% extends "default/module.html.jinja2" %}
+
+{% macro is_public(doc) %}
+    {#
+    This macro is a bit unconventional in that its output is not rendered, but treated as a boolean:
+    Returning no text is interpreted as false, returning any other text is iterpreted as true.
+    Implementing this as a macro makes it very easy to override with a custom template, see
+    https://github.com/mitmproxy/pdoc/tree/main/examples/custom-template.
+    #}
+    {% if not include_undocumented and not doc.docstring %}
+        {# hide members that are undocumented if include_undocumented has been toggled off. #}
+    {% elif doc.docstring and "@private" in doc.docstring %}
+        {# hide members explicitly marked as @private #}
+    {% elif doc.name == "__init__" and (doc.docstring or (doc.kind == "function" and doc.signature_without_self.parameters)) %}
+        {# show constructors that have a docstring or at least one extra argument #}
+        true
+    {% elif doc.name == "__doc__" %}
+        {# We don't want to document __doc__ itself, https://github.com/mitmproxy/pdoc/issues/235 #}
+    {% elif doc.kind == "variable" and doc.is_typevar and not doc.docstring %}
+        {# do not document TypeVars, that only clutters the docs. #}
+    {% elif (doc.qualname or doc.name) is in(module.obj.__all__ or []) %}
+        {# members starting with an underscore are still public if mentioned in __all__ #}
+        true
+    {% elif not doc.name.startswith("__") %}
+        {# members not starting with an underscore are considered public by default #}
+        true
+    {% endif %}
+{% endmacro %}
+
+
